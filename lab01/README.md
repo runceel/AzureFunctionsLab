@@ -147,4 +147,121 @@ public partial class CreateThumbnailFunction(
 
 ### 3. サムネイル作成処理の確認
 
-作成したサムネイル作成処理を確認するためにローカルで実行してみます。Visual Studio で `F5` キーを押してデバッグ実行してください。
+作成したサムネイル作成処理を確認するためにローカルで実行してみます。Visual Studio で `F5` キーを押してデバッグ実行してください。で
+デバッグ実行を行うと以下のような画面が表示されます。作成した `CreateThumbnailFunction` が表示されていることを確認してください。
+
+![](images/2025-01-26-11-17-04.png)
+
+Microsoft Azure Storage Explorer を起動して「ストレージアカウント」→「（エミュレーター - 規定のポート）(Key)」→「BLOB コンテナー」の下に `images` コンテナーを作成して、作成したコンテナーに任意の画像ファイルをアップロードしてください。
+
+![](images/2025-01-26-11-21-07.png)
+
+アップロードした画像ファイルが `images` コンテナーにアップロードされると `thumbnails` コンテナーにサムネイル画像が作成されます。処理が動作しているか確認するために `thumbnails` コンテナーにサムネイル画像が作成されているか確認してください。初回のタイミングでは `thumbnails` コンテナーを表示するために「（エミュレーター - 規定のポート）(Key)」の右クリックメニューから「最新の情報に更新」を選択してください。
+
+![](images/2025-01-26-11-29-47.png)
+
+デバッグ実行時に表示されたウィンドウには `CreateThumbnailFunction` の実行ログが表示されています。
+
+![](images/2025-01-26-11-31-28.png)
+
+> [!NOTE]
+> オプション：Visual Studio でブレークポイントを置いてデバッグ実行することで処理の中身を確認することができます。ブレークポイントを設定するには関数の左側の行番号の部分をクリックすると赤い丸が表示されます。ブレークポイントを解除するには再度クリックして赤い丸が消えるようにしてください。
+
+動作確認ができたらデバッグ実行を停止してください。
+
+### 4. 画像を取得する関数の作成
+
+画像を取得するための HTTP トリガーの関数を作成します。
+
+プロジェクトの右クリックメニューから「追加」→「新しい Azure 関数…」を選択します。
+
+![](images/2025-01-26-11-35-17.png)
+
+名前に `GetOriginalImageFunction` と入力して「追加」を選択してください。
+
+![](images/2025-01-26-11-37-42.png)
+
+Http Trigger を選択して「追加」を選択してください。
+
+![](images/2025-01-26-11-39-46.png)
+
+`GetOriginalImageFunction` が作成されます。
+
+**同様の手順で `GetThumbnailImageFunction` も作成してください。**
+
+作成した関数に画像を取得する処理を追加します。`GetOriginalImageFunction.cs` のコードを以下のように書き換えてください。
+
+```csharp:GetOriginalImageFunction.cs
+using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Functions.Worker;
+
+namespace ImageResizeApp;
+
+public class GetOriginalImageFunction
+{
+    [Function("GetOriginalImageFunction")]
+    public async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "images/{name}")] HttpRequest req,
+        [BlobInput("images/{name}")]
+        BlobClient blobClient)
+    {
+        if (!await blobClient.ExistsAsync()) return new NotFoundResult();
+
+        var content = await blobClient.DownloadContentAsync();
+        var extension = Path.GetExtension(blobClient.Name).TrimStart('.');
+        return new FileContentResult(content.Value.Content.ToArray(), $"image/{extension}");
+    }
+}
+```
+
+`GetThumbnailImageFunction.cs` のコードを以下のように書き換えてください。
+
+```csharp:GetThumbnailImageFunction.cs
+using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Functions.Worker;
+
+namespace ImageResizeApp;
+
+public class GetThumbnailImageFunction
+{
+    [Function("GetThumbnailImageFunction")]
+    public async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "thumbnails/{name}")] HttpRequest req,
+        [BlobInput("thumbnails/{name}")]
+        BlobClient blobClient)
+    {
+        if (!await blobClient.ExistsAsync()) return new NotFoundResult();
+
+        var content = await blobClient.DownloadContentAsync();
+        var extension = Path.GetExtension(blobClient.Name).TrimStart('.');
+        return new FileContentResult(content.Value.Content.ToArray(), $"image/{extension}");
+    }
+}
+```
+
+### 5. ローカルで動作確認
+
+作成した関数をローカルで動作確認します。Visual Studio で `F5` キーを押してデバッグ実行してください。
+デバッグ実行をすると以下のような画面が表示されます。作成した `GetOriginalImageFunction` と `GetThumbnailImageFunction` が表示されていることを確認してください。
+
+![](images/2025-01-26-11-58-21.png)
+
+表示されている URL の `{name}` の部分をアップロードしたファイル名にしてブラウザでアクセスすると画像が表示されます。存在しない画像の名前を指定すると `404` エラーが表示されます。
+
+`GetOriginalImageFunction` と `GetThumnbailImageFunction` の動作確認ができたらデバッグ実行を停止してください。
+
+ハンズオンの手順は以上です。以降の手順はオプションとなります。
+
+### 6. Azure へのデプロイ (オプション)
+
+作成した Azure Functions を Azure にデプロイして動作させます。以下のドキュメントの「Azure に発行する」の手順に従ってデプロイしてください。
+
+https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-develop-vs?pivots=isolated#publish-to-azure
+
+デプロイが完了したら Azure Portal で Azure Functions の画面を開いてデプロイした関数が表示されていることを確認してください。
+
+
