@@ -260,8 +260,54 @@ public class GetThumbnailImageFunction
 
 作成した Azure Functions を Azure にデプロイして動作させます。以下のドキュメントの「Azure に発行する」の手順に従ってデプロイしてください。
 
+> [!NOTE]
+> このドキュメントの手順では OS は Windows になっていますが、今回のコードは Linux でも動作します。
+> 好きな方の OS を選択してデプロイしてください。
+
 https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-develop-vs?pivots=isolated#publish-to-azure
 
 デプロイが完了したら Azure Portal で Azure Functions の画面を開いてデプロイした関数が表示されていることを確認してください。
 
+![](images/2025-01-26-14-21-04.png)
+
+### 7. Azure での動作確認 (オプション)
+
+デプロイした Azure Functions が正常に動作しているか確認します。Azure Portal で Azure Functions と同時にデプロイされたストレージアカウントを選択してください。
+
+![](images/2025-01-26-14-23-05.png)
+
+ストレージブラウザーを選択すると Microsoft Azure Storage Explorer のような画面が表示されます。「＋コンテナーの追加」を選択して `images` コンテナーを追加してください。
+
+![](images/2025-01-26-14-25-43.png)
+
+> [!NOTE]
+> 作成画面のスクリーンショットは省略しています。
+
+以下のようなエラーが表示された場合は「アクセスキーに切り替える」を選択してください。
+
+![](images/2025-01-26-14-29-50.png)
+
+> [!NOTE]
+> Azure のリソースへのアクセスには大きくわけて2つの方法があります。
+> アクセスキーを使用する方法と Microsoft Entra ID ベースの認証を使用する方法です。運用環境では Microsoft Entra ID ベースの認証を使用することを推奨しますが、ここではアクセスキーを使用する方法で説明しています。
+
+`images` コンテナーに画像ファイルをアップロードしてください。アップロードを行うと関数が実行されて `thumbnails` コンテナーにサムネイル画像が作成されます。
+
+![](images/2025-01-26-14-33-01.png)
+
+作成された `thumbnails` コンテナーにサムネイル画像が作成されていることを確認してください。
+
+![](images/2025-01-26-14-39-00.png)
+
+作成した `GetOriginalImageFunction` と `GetThumbnailImageFunction` を使用して画像を取得することができます。`GetOriginalImageFunction` と `GetThumbnailImageFunction` 関数は関数レベルの認証がかかっているため Azure Functions のキーが必要になります。
+キーは Azure Functions のアプリキーから取得することも可能ですが、キー付きの URL を `GetOriginalImageFunction` か `GetThumbnailImageFunction` を選択した画面で「関数の URL の取得」から「default (ファンクションキー)」で URL が取得できます。
+
+![](images/2025-01-26-14-41-57.png)
+
+この URL の `{name}` の部分を Blob ストレージにアップロードしたファイル名にして Azure Functions を実行すると画像が表示されます。
+
+> [!NOTE]
+> このハンズオン ラボでは、Azure Functions の HTTP トリガーの関数からバイナリデータ（画像データ）を返しています。これは、小さなファイルには問題ありませんが、大きなファイルを返す場合は、Azure Functions の制限 (実行時間の制限や大きなファイルをメモリ上に展開することによるメモリ不足など) によりエラーが発生する可能性があります。大きなファイルを返す場合は、Azure Functions から直接ファイルを返すのではなく、Azure Blob Storage などのストレージ サービスに保存して Azure Functions からはストレージアカウントの対象のファイルの URL を返すようにすることをお勧めします。
+>
+> Azure Functions の制限については [Azure Functions のホスティング オプション](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-scale) の「サービスの制限」のセクションを参照してください。
 

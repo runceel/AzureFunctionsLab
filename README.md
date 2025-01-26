@@ -29,4 +29,6 @@ Windows 11 に以下のツールをインストールしてください。
 
 ## ラボ
 
-TBD
+1. [Azure Functions ハンズオン ラボ](lab01/README.md)
+2. [Durable Functions ハンズオン ラボ](lab02/README.md)
+
