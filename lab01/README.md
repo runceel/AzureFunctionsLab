@@ -122,7 +122,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ImageResizeApp;
 
-public partial class CreateThumbnailFunction(
+public class CreateThumbnailFunction(
     ImageResizer imageResizer,
     ILogger<CreateThumbnailFunction> logger)
 {
