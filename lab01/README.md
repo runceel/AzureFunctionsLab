@@ -258,6 +258,9 @@ public class GetThumbnailImageFunction
 
 ### 6. Azure へのデプロイ (オプション)
 
+> [!WARNING]
+> Azure リソースを使用すると料金が発生します。このラボで使用した Azure リソースについては、Azure Portal で確認してください。ハンズオン終了後に必ず Azure ポータルでリソースを削除してください。
+
 作成した Azure Functions を Azure にデプロイして動作させます。以下のドキュメントの「Azure に発行する」の手順に従ってデプロイしてください。
 
 > [!NOTE]
