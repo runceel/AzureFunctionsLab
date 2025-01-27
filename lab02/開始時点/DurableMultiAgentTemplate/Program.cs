@@ -28,6 +28,7 @@ builder.Services
 
                 if (builder.Environment.IsDevelopment())
                 {
+                    // Local development では API Key を使用する
                     var apiKey = builder.Configuration["AppConfig:OpenAIApiKey"];
                     if (string.IsNullOrEmpty(apiKey)) throw new InvalidOperationException("AppConfig:OpenAIApiKey is required.");
                     return new AzureOpenAIClient(
@@ -37,6 +38,7 @@ builder.Services
                 }
                 else
                 {
+                    // Azure Functions では Managed Identity を使用する
                     return new AzureOpenAIClient(
                         new Uri(endpoint),
                         new DefaultAzureCredential(),
