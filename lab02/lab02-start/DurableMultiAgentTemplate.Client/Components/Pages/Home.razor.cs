@@ -3,7 +3,6 @@ using DurableMultiAgentTemplate.Client.Model;
 using DurableMultiAgentTemplate.Client.Services;
 using DurableMultiAgentTemplate.Client.Utilities;
 using DurableMultiAgentTemplate.Model;
-using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace DurableMultiAgentTemplate.Client.Components.Pages;
 
@@ -13,7 +12,6 @@ public partial class Home(AgentChatService agentChatService, ILogger<Home> logge
     private readonly ExecutionTracker _executionTracker = new();
     private readonly ChatInput _chatInput = new();
     private readonly List<ChatMessage> _messages = [];
-    private readonly List<IAdditionalInfo> _additionalInfo = [];
 
     private async Task SendMessageAsync()
     {
@@ -46,15 +44,9 @@ public partial class Home(AgentChatService agentChatService, ILogger<Home> logge
                     _ => throw new InvalidOperationException()
                 })
                 .ToList(),
-                RequireAdditionalInfo = _chatInput.RequireAdditionalInfo,
             });
             _messages.RemoveAt(_messages.Count - 1);
             _messages.Add(new AgentChatMessage(response));
-
-            if (response.AdditionalInfo is not null)
-            {
-                _additionalInfo.AddRange(response.AdditionalInfo);
-            }
 
             _scrollToBottomContext.RequestScrollToBottom();
             _chatInput.Message = "";
@@ -72,6 +64,5 @@ public partial class Home(AgentChatService agentChatService, ILogger<Home> logge
     private void Reset()
     {
         _messages.Clear();
-        _additionalInfo.Clear();
     }
 }
