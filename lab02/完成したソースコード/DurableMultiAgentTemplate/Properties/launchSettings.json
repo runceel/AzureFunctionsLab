@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DurableMultiAgentTemplate": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7133",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
