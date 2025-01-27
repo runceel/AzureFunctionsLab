@@ -309,7 +309,9 @@ https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-develop-vs?piv
 
 この URL の `{name}` の部分を Blob ストレージにアップロードしたファイル名にして Azure Functions を実行すると画像が表示されます。
 
-> [!NOTE]
+確認が出来たらハンズオンは終了です。Azure Portal でリソースを削除してください。
+
+> [!WARNING]
 > このハンズオン ラボでは、Azure Functions の HTTP トリガーの関数からバイナリデータ（画像データ）を返しています。これは、小さなファイルには問題ありませんが、大きなファイルを返す場合は、Azure Functions の制限 (実行時間の制限や大きなファイルをメモリ上に展開することによるメモリ不足など) によりエラーが発生する可能性があります。大きなファイルを返す場合は、Azure Functions から直接ファイルを返すのではなく、Azure Blob Storage などのストレージ サービスに保存して Azure Functions からはストレージアカウントの対象のファイルの URL を返すようにすることをお勧めします。
 >
 > Azure Functions の制限については [Azure Functions のホスティング オプション](https://learn.microsoft.com/ja-jp/azure/azure-functions/functions-scale) の「サービスの制限」のセクションを参照してください。
