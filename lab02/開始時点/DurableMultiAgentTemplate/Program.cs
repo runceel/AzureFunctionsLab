@@ -1,12 +1,12 @@
 ﻿using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
+using Azure;
 using Azure.AI.OpenAI;
-using Azure.Core;
 using Azure.Identity;
+using DurableMultiAgentTemplate.Model;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Azure;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -26,11 +26,22 @@ builder.Services
                 var endpoint = builder.Configuration["AppConfig:OpenAIEndpoint"];
                 if (string.IsNullOrEmpty(endpoint)) throw new InvalidOperationException("AppConfig:OpenAIEndpoint is required.");
 
-                TokenCredential credential = builder.Environment.IsDevelopment() ?
-                    new AzureCliCredential() :
-                    new DefaultAzureCredential();
-
-                return new AzureOpenAIClient(new Uri(endpoint), credential, options);
+                if (builder.Environment.IsDevelopment())
+                {
+                    var apiKey = builder.Configuration["AppConfig:OpenAIApiKey"];
+                    if (string.IsNullOrEmpty(apiKey)) throw new InvalidOperationException("AppConfig:OpenAIApiKey is required.");
+                    return new AzureOpenAIClient(
+                        new Uri(endpoint),
+                        new AzureKeyCredential(apiKey),
+                        options);
+                }
+                else
+                {
+                    return new AzureOpenAIClient(
+                        new Uri(endpoint),
+                        new DefaultAzureCredential(),
+                        options);
+                }
             });
         });
 
