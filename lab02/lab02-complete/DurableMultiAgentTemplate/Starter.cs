@@ -1,4 +1,5 @@
-using System.Text.Json;
+﻿using System.Text.Json;
+using Castle.Core.Logging;
 using DurableMultiAgentTemplate.Agent.Orchestrator;
 using DurableMultiAgentTemplate.Model;
 using Microsoft.AspNetCore.Http;
@@ -11,54 +12,35 @@ namespace DurableMultiAgentTemplate;
 
 public class Starter(ILogger<Starter> logger)
 {
-    private readonly ILogger<Starter> _logger = logger;
-
     [Function("SyncStarter")]
     public async Task<HttpResponseData> SyncStarter(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "invoke/sync")] HttpRequestData req,
         [DurableClient] DurableTaskClient client)
     {
-        _logger.LogInformation("Sync HTTP trigger function processed a request.");
+        logger.LogInformation("Sync HTTP trigger function processed a request.");
+        // リクエスト データを取得
         var reqData = await GetRequestData(req);
 
         if (reqData == null)
         {
+            // リクエスト データがない場合は、BadRequest を返す
             var badRequestResponse = req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
             await badRequestResponse.WriteStringAsync("Please pass a prompt in the request body");
             return badRequestResponse;
         }
 
-        string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(nameof(AgentOrchestrator), reqData);
+        // AgentOrchestrator オーケストレーションを開始
+        var instanceId = await client.ScheduleNewOrchestrationInstanceAsync(nameof(AgentOrchestrator), reqData);
 
-        _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        OrchestrationMetadata metadata = await client.WaitForInstanceCompletionAsync(instanceId, getInputsAndOutputs: true);
+        // インスタンスの完了を待機し、結果を取得
+        var metadata = await client.WaitForInstanceCompletionAsync(instanceId, getInputsAndOutputs: true);
 
+        // レスポンスを作成して返却
         var res = HttpResponseData.CreateResponse(req);
         await res.WriteStringAsync(metadata.SerializedOutput ?? "");
         return res;
-    }
-
-    [Function("AsyncStarter")]
-    public async Task<HttpResponseData> AsyncStarter(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "invoke/async")] HttpRequestData req,
-        [DurableClient] DurableTaskClient client)
-    {
-        _logger.LogInformation("Async HTTP trigger function processed a request.");
-        var reqData = await GetRequestData(req);
-
-        if (reqData == null)
-        {
-            var badRequestResponse = req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
-            await badRequestResponse.WriteStringAsync("Please pass a prompt in the request body");
-            return badRequestResponse;
-        }
-
-        string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(nameof(AgentOrchestrator), reqData);
-
-        _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
-
-        return await client.CreateCheckStatusResponseAsync(req, instanceId);
     }
 
     private async Task<AgentRequestDto?> GetRequestData(HttpRequestData req)

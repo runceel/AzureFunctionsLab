@@ -4,6 +4,7 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "AppConfig:OpenAIEndpoint": "https://ai-kaotajpeast.openai.azure.com/",
-    "AppConfig:OpenAIDeploy": "gpt-4o"
+    "AppConfig:OpenAIDeploy": "gpt-4o",
+    "AppConfig:OpenAIAPIKey": "f47bfd325ce54af3ad83cb17bc4312ea"
   }
 }

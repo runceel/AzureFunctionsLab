@@ -9,7 +9,6 @@
 
 <SectionContent SectionName="ToolBar">
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.End">
-        <FluentCheckbox @bind-Value="_chatInput.RequireAdditionalInfo" Label="Additional Info" Disabled="@(_messages.Count != 0)" />
         <FluentButton OnClick="Reset" Disabled="_executionTracker.IsInProgress">Clear History</FluentButton>
     </FluentStack>
 </SectionContent>
@@ -17,17 +16,6 @@
 <ScrollToBottom ScrollHostId="thread" Context="_scrollToBottomContext" />
 
 <FluentStack Orientation="Orientation.Horizontal" Style="width:100%; height: 100%;">
-    @if (_chatInput.RequireAdditionalInfo)
-    {
-        <div class="content" style="width: 450px; height: 100%; padding: 10px;">
-            <div class="container">
-                <div id="additional-info-thread" class="thread">
-                    <AdditionalInfoList AdditionalInfo="_additionalInfo" />
-                </div>
-            </div>
-        </div>
-        <FluentDivider Orientation="Orientation.Vertical" Style="height: 100%;" />
-    }
     <div class="content">
         <div class="container">
             <div id="thread" class="thread">
