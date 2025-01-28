@@ -197,35 +197,51 @@ Agent: 「アルテ・シンフォニア」でのご予約情報は以下の通�
 - `SubmitReservationAgent`
   - 宿泊先の予約を行います。
 
-このサンプルでは、この Agent は 30% の確率でエラーを返すようになっています。さらに応答は、ほぼ固定の文字列を返します。実際のシステムでは Azure OpenAI Service などで提供される AI サービスを呼び出すことになります。
+このサンプルでは、これらの Agent の多くは 30% の確率でエラーを返すようになっています。さらに応答は、ほぼ固定の文字列を返します。実際のシステムでは Azure OpenAI Service などで提供される AI サービスを呼び出すことになります。
 
-実際に `SubmitReservationActivity` を見てみましょう。
+実際に `GetClimateActivity` を見てみましょう。`Run` メソッドの最初で 30% の確率で例外をスローするようになっています。
+その後、ほぼ固定の文字列を返しています。
 
 ```csharp:SubmitReservationActivity.cs
 using Azure.AI.OpenAI;
 using DurableMultiAgentTemplate.Model;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace DurableMultiAgentTemplate.Agent.SubmitReservationAgent;
+namespace DurableMultiAgentTemplate.Agent.GetClimateAgent;
 
-public class SubmitReservationActivity(AzureOpenAIClient openAIClient, IOptions<AppConfiguration> configuration)
+public class GetClimateActivity(AzureOpenAIClient openAIClient, 
+    IOptions<AppConfiguration> configuration,
+    ILogger<GetClimateActivity> logger)
 {
     private readonly AzureOpenAIClient _openAIClient = openAIClient;
     private readonly AppConfiguration _configuration = configuration.Value;
 
-    [Function(AgentActivityName.SubmitReservationAgent)]
-    public string Run([ActivityTrigger] SubmitReservationRequest req, FunctionContext executionContext)
+    [Function(AgentActivityName.GetClimateAgent)]
+    public string Run([ActivityTrigger] GetClimateRequest req, FunctionContext executionContext)
     {
+        if(Random.Shared.Next(0, 10) < 3)
+        {
+            logger.LogInformation("Failed to get climate information");
+            throw new InvalidOperationException("Failed to get climate information");
+        }
+
         // This is sample code. Replace this with your own logic.
         var result = $"""
-        予約番号は {Guid.NewGuid()} です。
-        --------------------------------
-        ホテル名：{req.Destination}
-        チェックイン日：{req.CheckIn}
-        チェックアウト日：{req.CheckOut}
-        人数：{req.GuestsCount} 名
-        --------------------------------
+        {req.Location}の気候は年間を通じて暖かく、**熱帯モンスーン気候**に分類されます。大きく分けて**乾季**と**雨季**があり、それぞれ異なる特徴があります。
+        ---
+
+        ### 平均気温
+        - **年間を通じて：** 26～30℃程度
+        - **日中：** 30℃前後まで上がることが多い。
+        - **夜間：** 23～25℃程度で過ごしやすい。
+
+        // 中略...
+
+        ---
+
+        {req.Location}は雨季でも旅行を楽しめるよう工夫されているため、いつ訪れても魅力的です。乾季の5月～10月が観光のベストシーズンとされていますが、雨季なら緑豊かな景観と比較的空いている観光地を楽しむことができます。
         """;
 
         return result;
@@ -233,7 +249,7 @@ public class SubmitReservationActivity(AzureOpenAIClient openAIClient, IOptions<
 }
 ```
 
-他の 4 つの Agent も同様な実装になっています。
+他の 4 つの Agent も、ほぼ同様な実装になっています。
 
 #### オーケストレーターから呼び出すアクティビティ
 
@@ -244,7 +260,7 @@ public class SubmitReservationActivity(AzureOpenAIClient openAIClient, IOptions<
 2. `SynthesizerActivity`
    - Agent からの応答を合成し、最終的な応答を生成します。
 
-この 2 つのアクティビティと 5 つの Agent を使用して、オーケストレーションを行います。
+この 2 つのアクティビティと 5 つの Agent を使用して AI エージェントのオーケストレーションの実装を行います。
 
 ## 接続先の構成
 
