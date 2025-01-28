@@ -394,7 +394,7 @@ public async Task<HttpResponseData> SyncStarter(
 }
 ```
 
-このコードは HTTP トリガー関数として動作し、リクエストを受け取ると `AgentOrchestrator` オーケストレーションを開始します。オーケストレーションの完了を待機し、結果を返します。
+このコードは HTTP トリガー関数として動作し、リクエストを受け取ると `AgentOrchestrator` オーケストレーションを開始します。オーケストレーションの完了を待って、結果を返します。
 
 ## 動作確認
 
@@ -402,14 +402,14 @@ Visual Studio のツールバーにある開始ボタンの左にあるプロフ
 
 ![](images/2025-01-27-15-25-51.png)
 
-デバッグ実行をすると `DurableMultiAgentTemplate` プロジェクトと `DurableMultiAgentTemplate.Client` プロジェクトが起動します。起動に失敗した場合は、一度デバッグ実行を停止し、再度デバッグ実行を行ってください。
+デバッグ実行を行うと `DurableMultiAgentTemplate` プロジェクトと `DurableMultiAgentTemplate.Client` プロジェクトが起動します。起動に失敗した場合は、一度デバッグ実行を停止し、再度デバッグ実行を試みてください。
 
-以下のように Azure Functions のローカル実行環境とブラウザーが立ち上がりチャットが行えるようになります。
+以下のように Azure Functions のローカル実行環境とブラウザーが立ち上がり、チャットが行えるようになります。チャットを行い、エージェントが返す結果を確認してください。また `AgentOrchestrator` にブレークポイントを設定し、1 回の呼び出しで何度もオーケストレーター関数が呼び出されることを確認してください。
 
 ![](images/2025-01-27-15-29-01.png)
 
 > [!NOTE]
-> 各エージェントは 30% の確率でエラーを返すようになっています。そのため、エラーが発生することがあります。その場合は以下の赤枠の緑色の再生ボタンを選択して処理を続行してください。このエラーへの対応は、この後の手順で行います。
+> 各エージェントは 30% の確率でエラーを返すようになっています。そのため、エラーが発生する場合があります。その場合は以下の赤枠の緑色の再生ボタンを選択して処理を続行してください。このエラーへの対応は、後の手順で行います。
 > ![](images/2025-01-27-15-33-12.png)
 
 ## リトライ処理の追加
@@ -423,11 +423,11 @@ public class AgentOrchestrator()
 {
     // リトライを構成した TaskOptions を定義
     private static TaskOptions DefaultTaskOptions { get; } = new(
-    new TaskRetryOptions(new RetryPolicy(
-        3,
-        TimeSpan.FromSeconds(1),
-        1,
-        TimeSpan.FromSeconds(10))));
+        new TaskRetryOptions(new RetryPolicy(
+            3,
+            TimeSpan.FromSeconds(1),
+            1,
+            TimeSpan.FromSeconds(10))));
 
     [Function(nameof(AgentOrchestrator))]
     public async Task<AgentResponseDto> RunOrchestrator(
@@ -438,7 +438,7 @@ public class AgentOrchestrator()
 }
 ```
 
-次に `AgentOrchestrator` で Activity を呼び出す際に `TaskOptions` を指定します。以下のように `AgentOrchestrator` クラスの `RunOrchestrator` メソッド内で Activity を呼び出す `CallActivityAsync` メソッドの第三引数に `TaskOptions` を指定するように変更します。(全部で 3 箇所あります。)
+次に `AgentOrchestrator` で Activity を呼び出す際に `TaskOptions` を指定するようにコードを変更します。以下のように `AgentOrchestrator` クラスの `RunOrchestrator` メソッド内で Activity を呼び出す `CallActivityAsync` メソッドの第三引数に `TaskOptions` を指定してください。(全部で 3 箇所あります。)
 
 ここまでの変更を適用すると `AgentOrchestrator` クラスは以下のようになります。
 
